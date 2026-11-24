@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+         xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+         xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10"
+         xmlns:desktop4="http://schemas.microsoft.com/appx/manifest/desktop/windows10/4"
+         xmlns:desktop5="http://schemas.microsoft.com/appx/manifest/desktop/windows10/5"
+         xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+         IgnorableNamespaces="uap desktop4 desktop5 com rescap">
+  <Identity Name="PeaZip.ModernMenu.Community"
+            Publisher="CN=PeaZipModernMenuLocal"
+            Version="1.2.1.0"
+            ProcessorArchitecture="x64" />
+  <Properties>
+    <DisplayName>PeaZip Modern Menu - Community Companion</DisplayName>
+    <PublisherDisplayName>Local Community Build</PublisherDisplayName>
+    <Description>Modern Explorer menu for a separately installed PeaZip</Description>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop"
+                        MinVersion="10.0.22000.0"
+                        MaxVersionTested="10.0.26300.0" />
+  </Dependencies>
+  <Resources>
+    <Resource Language="sk-SK" />
+    <Resource Language="en-US" />
+  </Resources>
+  <Applications>
+    <Application Id="PeaZipModernMenu"
+                 Executable="PeaZipMenuStub.exe"
+                 EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements DisplayName="PeaZip Modern Menu"
+                          Description="PeaZip shell integration"
+                          BackgroundColor="transparent"
+                          Square150x150Logo="Assets\Square150x150Logo.png"
+                          Square44x44Logo="Assets\Square44x44Logo.png" />
+      <Extensions>
+        <desktop4:Extension Category="windows.fileExplorerContextMenus">
+          <desktop4:FileExplorerContextMenus>
+            <desktop5:ItemType Type="*">
+              <desktop5:Verb Id="PeaZipModernMenu" Clsid="C8425781-09D3-4DEB-A947-30CD4509C7C4" />
+            </desktop5:ItemType>
+            <desktop5:ItemType Type="Directory">
+              <desktop5:Verb Id="PeaZipModernMenu" Clsid="C8425781-09D3-4DEB-A947-30CD4509C7C4" />
+            </desktop5:ItemType>
+          </desktop4:FileExplorerContextMenus>
+        </desktop4:Extension>
+        <com:Extension Category="windows.comServer">
+          <com:ComServer>
+            <com:SurrogateServer DisplayName="PeaZip Modern Shell Extension">
+              <com:Class Id="C8425781-09D3-4DEB-A947-30CD4509C7C4"
+                         Path="PeaZip.ModernShellExtension.dll"
+                         ThreadingModel="STA" />
+            </com:SurrogateServer>
+          </com:ComServer>
+        </com:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>

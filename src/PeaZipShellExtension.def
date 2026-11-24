@@ -1,0 +1,6 @@
+; COM entry points are already declared by the Windows SDK (combaseapi.h).
+; Use a .def export list rather than __declspec(dllexport) on their definitions.
+; Let /OUT set the DLL name, avoiding LNK4070 from a conflicting LIBRARY directive.
+EXPORTS
+    DllGetClassObject PRIVATE
+    DllCanUnloadNow PRIVATE
