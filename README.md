@@ -80,13 +80,16 @@ tools\Build-x64.cmd
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\Build-Inno.ps1
 ```
 
-The wrapper selects x64 MSVC; direct builds in an x86 Developer Prompt are intentionally rejected. Outputs are placed under `out\` (git-ignored):
+The wrapper selects x64 MSVC; direct builds in an x86 Developer Prompt are intentionally rejected. Outputs are placed under `out/`:
 
 ```text
-out\PeaZip.ModernMenu.Community_1.2.1.0_x64.msix
-out\stage\PeaZip.ModernShellExtension.dll
-out\stage\PeaZipMenuConfig.exe
-out\installer\PeaZip-ModernMenu-Setup-v1.2.1.exe
+out/
+├── PeaZip.ModernMenu.Community_1.2.1.0_x64.msix
+├── stage/
+│   ├── PeaZip.ModernShellExtension.dll
+│   └── PeaZipMenuConfig.exe
+└── installer/
+    └── PeaZip-ModernMenu-Setup-v1.2.1.exe
 ```
 
 The default `Build-MSIX.ps1` signing mode is **LocalTest**. It creates/uses a self-signed **development** certificate *on your machine*. Neither this certificate nor the resulting installer is suitable for distributing to strangers. To create an unsigned package for inspection, use `tools\Build-x64.cmd -SignMode Unsigned` (it cannot be installed normally). For production certificate integration, read [Signing and distribution](docs/SIGNING_AND_DISTRIBUTION.md).
