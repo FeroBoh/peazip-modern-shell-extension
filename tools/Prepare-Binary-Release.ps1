@@ -4,9 +4,9 @@ param()
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $out = Join-Path $root 'out'
-$release = Join-Path $out 'release-v1.2.2'
+$release = Join-Path $out 'release-v1.2.3'
 $files = @(
-    (Join-Path $out 'installer\PeaZip-ModernMenu-Setup-v1.2.2.exe'),
+    (Join-Path $out 'installer\PeaZip-ModernMenu-Setup-v1.2.3.exe'),
     (Join-Path $out 'PeaZipModernMenuCommunity.cer')
 )
 foreach ($file in $files) { if (-not (Test-Path -LiteralPath $file -PathType Leaf)) { throw "Missing release file: $file" } }

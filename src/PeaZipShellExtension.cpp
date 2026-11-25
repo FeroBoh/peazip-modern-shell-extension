@@ -324,8 +324,11 @@ static HRESULT InvokePeaZip(CommandId id, IShellItemArray* selection) {
     }
     std::vector<std::wstring> args;
     switch (id) {
-        // For Add7Z and AddZIP use the same interactive commands as PeaZip's classic menu.
-        // Unlike -add27z/-add2zip these preserve the archiving confirmation screen.
+        // The COM menu supplies the entire multi-selection in ONE argv list.
+        // PeaZip's -add2multi* switches are for registry-backed context menus
+        // that aggregate independent single-item invocations via temporary files.
+        // Use direct multi-path switches instead. PeaZip may directly create
+        // an archive, instead of showing the legacy -add2multi* confirmation UI.
     case CommandId::ExtractDialog: args.push_back(L"-ext2main"); break;
     case CommandId::ExtractHere: args.push_back(L"-ext2herei"); break;
     case CommandId::ExtractSmart: args.push_back(L"-ext2folderi"); break;
@@ -334,8 +337,8 @@ static HRESULT InvokePeaZip(CommandId id, IShellItemArray* selection) {
     case CommandId::OpenAsArchive: args.push_back(L"-ext2browseasarchive"); break;
     case CommandId::BrowsePath: args.push_back(L"-ext2browsepath"); break;
     case CommandId::AddGUI: args.push_back(L"-add2archive"); break;
-    case CommandId::Add7Z: args.push_back(L"-add2multi7z"); break;
-    case CommandId::AddZIP: args.push_back(L"-add2multizip"); break;
+    case CommandId::Add7Z: args.push_back(L"-add27z"); break;
+    case CommandId::AddZIP: args.push_back(L"-add2zip"); break;
     case CommandId::Encrypt7Z: args.push_back(L"-add2multi7zencrypt"); break;
     case CommandId::Convert: args.push_back(L"-add2multiconvert"); break;
     case CommandId::HashTools: {

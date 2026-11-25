@@ -14,7 +14,7 @@ $root = Split-Path -Parent $PSScriptRoot
 $out = Join-Path $root 'out'
 $stage = Join-Path $out 'stage'
 $obj = Join-Path $out 'obj'
-$version = '1.2.2.0'
+$version = '1.2.3.0'
 $pkg = Join-Path $out "PeaZip.ModernMenu.Community_${version}_x64.msix"
 
 function Need-Command([string]$name) {

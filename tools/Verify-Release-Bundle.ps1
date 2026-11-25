@@ -1,4 +1,4 @@
-# Read-only verification of v1.2.2 community release assets and installed payloads.
+# Read-only verification of v1.2.3 community release assets and installed payloads.
 # Compatible with Windows PowerShell 5.1. Does NOT install, trust or delete certificates.
 [CmdletBinding()]
 param(
@@ -9,9 +9,9 @@ param(
 $ErrorActionPreference = 'Stop'
 $project = (Resolve-Path -LiteralPath $ProjectDir).Path
 $release = (Resolve-Path -LiteralPath $ReleaseDir).Path
-$exeName = 'PeaZip-ModernMenu-Setup-v1.2.2.exe'
+$exeName = 'PeaZip-ModernMenu-Setup-v1.2.3.exe'
 $cerName = 'PeaZipModernMenuCommunity.cer'
-$msixName = 'PeaZip.ModernMenu.Community_1.2.2.0_x64.msix'
+$msixName = 'PeaZip.ModernMenu.Community_1.2.3.0_x64.msix'
 $exePath = Join-Path $release $exeName
 $cerRelease = Join-Path $release $cerName
 $sumPath = Join-Path $release 'SHA256SUMS.txt'
@@ -87,10 +87,10 @@ if ($CheckInstalledFiles) {
     Assert-SameHash $actualMsix $msixBuild 'Installed MSIX vs build MSIX'
     Assert-SameHash $actualCer $cerBuild 'Installed CER vs build CER'
     $pkg = Get-AppxPackage -Name 'PeaZip.ModernMenu.Community' -ErrorAction Stop
-    if (-not $pkg -or -not (@($pkg) | Where-Object { $_.Version.ToString() -eq '1.2.2.0' })) {
-        throw 'Registered MSIX 1.2.2.0 not found for this user.'
+    if (-not $pkg -or -not (@($pkg) | Where-Object { $_.Version.ToString() -eq '1.2.3.0' })) {
+        throw 'Registered MSIX 1.2.3.0 not found for this user.'
     }
-    Write-Host 'PASS - MSIX 1.2.2.0 registered for current user' -ForegroundColor Green
+    Write-Host 'PASS - MSIX 1.2.3.0 registered for current user' -ForegroundColor Green
 } else {
     Write-Host 'INFO - To compare installer-deployed files, re-run with -CheckInstalledFiles after installing this exact EXE.'
 }

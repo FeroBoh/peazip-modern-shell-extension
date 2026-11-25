@@ -21,7 +21,7 @@ Write-DeploymentLog "=== Install / upgrade started (PID $PID, user $env:USERNAME
 $importedTrustThisRun = $false
 try {
     $root = Split-Path -Parent $PSScriptRoot
-    if (-not $PackagePath) { $PackagePath = Join-Path $root 'out\PeaZip.ModernMenu.Community_1.2.2.0_x64.msix' }
+    if (-not $PackagePath) { $PackagePath = Join-Path $root 'out\PeaZip.ModernMenu.Community_1.2.3.0_x64.msix' }
     if (-not $ManifestPath) { $ManifestPath = Join-Path $root 'out\stage\AppxManifest.xml' }
     $PackagePath = (Resolve-Path -LiteralPath $PackagePath -ErrorAction Stop).Path
     $ManifestPath = (Resolve-Path -LiteralPath $ManifestPath -ErrorAction Stop).Path

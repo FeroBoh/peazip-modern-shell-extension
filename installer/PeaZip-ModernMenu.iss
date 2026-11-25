@@ -1,10 +1,10 @@
-﻿; PeaZip Modern Shell Extension v1.2.2 (community signing consent and cleanup)
+; PeaZip Modern Shell Extension v1.2.3 minimal candidate (v1.2.2 installer baseline + English prompts)
 ; Independent per-user companion. Does not bundle or modify PeaZip itself.
 ; MSIX registration occurs in PrepareToInstall, before Inno copies its files.
 #define MyName "PeaZip Modern Shell Extension - Community Companion"
-#define MyVersion "1.2.2"
+#define MyVersion "1.2.3"
 #define MyAppId "{{DE451A2C-E3B1-410D-AC5A-1FC0C683FA48}"
-#define MsixName "PeaZip.ModernMenu.Community_1.2.2.0_x64.msix"
+#define MsixName "PeaZip.ModernMenu.Community_1.2.3.0_x64.msix"
 ; Build-Inno.ps1 injects these two SHA-256 pins into the compiled EXE.
 ; They are NEVER read from the certificate or MSIX at installation time.
 #ifndef ExpectedCertSha256
@@ -30,7 +30,7 @@ Compression=lzma2
 SolidCompression=yes
 UninstallDisplayIcon={app}\PeaZipMenuConfig.exe
 OutputDir=..\out\installer
-OutputBaseFilename=PeaZip-ModernMenu-Setup-v1.2.2
+OutputBaseFilename=PeaZip-ModernMenu-Setup-v1.2.3
 CloseApplications=yes
 RestartApplications=no
 ChangesAssociations=yes
@@ -96,13 +96,20 @@ end;
 
 // Inno Setup: returning False from NextButtonClick only blocks the page transition.
 // Exit is user-confirmed and routed through the normal Cancel workflow.
+// Override the normal wizard Cancel / window-close confirmation: native
+// Windows MessageBox labels are localized to the OS language (e.g. Ano/Nie).
+// TaskDialogMsgBox uses our explicit English labels on supported Windows 11.
 procedure CancelButtonClick(CurPageID: Integer; var Cancel, Confirm: Boolean);
 begin
+  Confirm := False; // Never show the OS-localized built-in Exit Setup question.
   if ConsentExitApproved then
   begin
-    Cancel := True;
-    Confirm := False; // The user already confirmed exit in NextButtonClick.
+    Cancel := True; // NextButtonClick already received explicit consent to exit.
+    exit;
   end;
+  Cancel := (TaskDialogMsgBox('Exit Setup?',
+      'Do you want to cancel installation and exit Setup?',
+      mbConfirmation, MB_YESNO, ['Yes', 'No'], 0) = IDYES);
 end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;
@@ -111,11 +118,12 @@ begin
   if (CurPageID = CertPage.ID) and (not ConsentBox.Checked) then
   begin
     Result := False;
-    if MsgBox(
+    if TaskDialogMsgBox(
+      'Community certificate consent required',
       'You have not agreed to trust the community signing certificate.' + #13#10 +
       'Without your consent, this extension cannot be installed.' + #13#10 + #13#10 +
       'Do you want to exit Setup now?',
-      mbConfirmation, MB_YESNO or MB_DEFBUTTON1) = IDYES then
+      mbConfirmation, MB_YESNO, ['Yes', 'No'], 0) = IDYES then
     begin
       ConsentExitApproved := True;
       WizardForm.Close;
@@ -168,7 +176,7 @@ begin
                ' -ExpectedCertSha256 "{#ExpectedCertSha256}" -ExpectedMsixSha256 "{#ExpectedMsixSha256}" -AllowTrustImport') then
   begin
     Result := 'MSIX installation or update failed. No companion files have been installed by this setup attempt.' + #13#10 +
-      'Windows may be using an older Explorer extension, or the MSIX signing certificate is not trusted.' + #13#10 +
+      'Windows could not deploy the MSIX. Check the deployment log for AppX volume and error details.' + #13#10 +
       'Existing PeaZip files and the old MSIX are not deliberately removed.' + #13#10 +
       'See ' + GetEnv('TEMP') + '\PeaZipModernMenu-Install.log for details.';
   end;
@@ -182,14 +190,16 @@ begin
   begin
     Extra := '';
     if (not UninstallSilent) and
-       (MsgBox('Also delete your PeaZip Modern Menu preferences and command order?' + #13#10 +
+       (TaskDialogMsgBox('Remove saved preferences?',
+               'Also delete your PeaZip Modern Menu preferences and command order?' + #13#10 +
                'Choose No to preserve them for a later reinstall.',
-               mbConfirmation, MB_YESNO) = IDYES) then
+               mbConfirmation, MB_YESNO, ['Yes', 'No'], 0) = IDYES) then
       Extra := ' -RemoveSettings';
     if (not UninstallSilent) and
-       (MsgBox('Remove this companion installer-managed community certificate from Windows TrustedPeople, if no other user requires it?' + #13#10 +
+       (TaskDialogMsgBox('Remove community certificate trust?',
+               'Remove this companion installer-managed community certificate from Windows TrustedPeople, if no other user requires it?' + #13#10 +
                'A Windows administrator UAC prompt may be shown. Certificates not imported by this installer will not be removed.',
-               mbConfirmation, MB_YESNO) = IDYES) then
+               mbConfirmation, MB_YESNO, ['Yes', 'No'], 0) = IDYES) then
       Extra := Extra + ' -RemoveTrust';
     Extra := Extra + ' -CertificatePath "' + ExpandConstant('{app}\PeaZipModernMenuCommunity.cer') +
       '" -TrustHelperPath "' + ExpandConstant('{app}\Trust-CompanionCertificate.ps1') +
@@ -197,10 +207,11 @@ begin
     if not RunPS(ExpandConstant('{app}\Uninstall-Companion.ps1'),
                  ExpandConstant('{app}\AppxManifest.xml'), '', Extra) then
     begin
-      MsgBox('The companion MSIX could not be removed. The uninstaller will stop to avoid leaving a registered extension without its management files.' + #13#10 +
+      TaskDialogMsgBox('Unable to remove companion MSIX',
+             'The companion MSIX could not be removed. The uninstaller will stop to avoid leaving a registered extension without its management files.' + #13#10 +
              'Please close Explorer windows or sign out and try again.' + #13#10 +
              'See ' + GetEnv('TEMP') + '\PeaZipModernMenu-Uninstall.log',
-             mbError, MB_OK);
+             mbError, MB_OK, ['OK'], 0);
       Abort; // documented to abort Uninstall when called from usUninstall
     end;
   end;

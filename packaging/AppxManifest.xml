@@ -8,7 +8,7 @@
          IgnorableNamespaces="uap desktop4 desktop5 com rescap">
   <Identity Name="PeaZip.ModernMenu.Community"
             Publisher="CN=PeaZipModernMenuLocal"
-            Version="1.2.2.0"
+            Version="1.2.3.0"
             ProcessorArchitecture="x64" />
   <Properties>
     <DisplayName>PeaZip Modern Menu - Community Companion</DisplayName>

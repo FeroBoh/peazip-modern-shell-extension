@@ -7,11 +7,10 @@ from pathlib import Path
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = 'v1.2.2'
+VERSION = 'v1.2.3'
 ALLOWED_ROOT_FILES = {
     '.gitignore', 'LICENSE', 'README.md', 'CHANGELOG.md',
-    'CONTRIBUTING.md', 'SECURITY.md', 'RELEASE_NOTES-v1.2.1.md',
-    'RELEASE_NOTES-v1.2.2.md', 'INSTALL.md',
+    'CONTRIBUTING.md', 'SECURITY.md', 'INSTALL.md', 'BUILDING.md',
 }
 ALLOWED_DIRECTORIES = {
     '.github', 'src', 'packaging', 'installer', 'tools', 'tests', 'docs', 'screenshots'

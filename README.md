@@ -1,7 +1,7 @@
 # PeaZip Modern Shell Extension — Community Companion
 
 **Independent, unofficial Windows 11 context-menu extension for [PeaZip](https://peazip.github.io/).**  
-**Release:** `v1.2.2` · Windows 11 x64 · PeaZip 11.4.0 (installed or Portable)
+**Stable release:** `v1.2.3` · Windows 11 x64
 
 Provides a native PeaZip submenu in the modern Windows 11 File Explorer context menu through `IExplorerCommand` and a signed MSIX component. The companion uses PeaZip's existing command-line interface and **does not bundle, modify, or replace PeaZip**.
 
@@ -11,7 +11,7 @@ Provides a native PeaZip submenu in the modern Windows 11 File Explorer context 
 
 **You do not need Visual Studio, Windows SDK, Inno Setup or PowerShell development commands.**
 
-1. Visit **[GitHub Releases](https://github.com/FeroBoh/peazip-modern-shell-extension/releases/latest)** and download `PeaZip-ModernMenu-Setup-v1.2.2.exe` and `SHA256SUMS.txt`.
+1. Visit **[GitHub Releases](https://github.com/FeroBoh/peazip-modern-shell-extension/releases/latest)** and download `PeaZip-ModernMenu-Setup-v1.2.3.exe` and `SHA256SUMS.txt`.
 2. Compare the setup EXE's SHA-256 with the published value (instructions in [INSTALL.md](INSTALL.md)). Check the release page and repository carefully; a checksum on the same page is an integrity check, not independent publisher authentication.
 3. Have **PeaZip installed**, or unpack **PeaZip Portable** separately.
 4. Run the EXE under your normal Windows account. Read the self-signed certificate warning and consent only if you accept the security implications. If requested, approve UAC to trust the **public leaf** certificate (not a root CA).
@@ -72,6 +72,27 @@ The eight screenshots below are provided by the tester. The files are included o
 
 ![Windows 11 26H2 — Settings / Personalization / Context menu](screenshots/Win11-26H2%28build%2026300.9818%29_Settings_Personalization_Context-menu.png)
 
+## What's new in v1.2.3
+
+Built on the stable v1.2.2 installer and signing infrastructure, without the
+experimental MSIX volume-switching code:
+
+- **Add to ZIP** and **Add to 7Z** now include **all selected Explorer files
+  and folders**, not just the right-clicked item.
+- Our installer and uninstaller confirmation dialogs use consistent English
+  **Yes / No** buttons (Windows-owned dialogs such as UAC remain localized).
+- In-place upgrades from v1.2.2 preserve command settings and ordering.
+
+See the single version history in [CHANGELOG.md](CHANGELOG.md).
+
+**Known MSIX installation limitation:** On the tested Windows 11 computer, a
+new installation failed when the system-wide default AppX volume was D:, but
+succeeded when it was set to the Windows system volume C:. Once installed,
+the extension continued working after the default was restored to D:. The
+installer does not alter global AppX settings. See
+[INSTALL.md — Known MSIX limitation](INSTALL.md#known-msix-limitation-non-system-default-appx-volume)
+for checks and a manual, administrator-approved workaround.
+
 ## Building from source (developers / maintainers)
 
 See **[BUILDING.md](BUILDING.md)** for the Visual Studio x64, Windows SDK, Inno Setup and community certificate procedure, static checks, local verification and release preparation.
@@ -80,11 +101,11 @@ Build outputs and developer certificates **must not** be committed. Only the mai
 
 ## Testing and limitations
 
-**Reported as successfully tested by the project maintainer/tester on Windows 11:** clean install, archive commands, GUI configuration and reordering, PeaZip Portable on a second PC, in-place upgrade from v1.2.1 to v1.2.2, uninstall/reinstall, optional certificate trust removal or retention, cancellation when consent is refused and cancellation when UAC elevation is refused. The exact release EXE and MSIX/certificate checksums should be verified before uploading final binaries; see [release checklist](docs/RELEASE_CHECKLIST.md).
+**Reported as successfully tested by the project maintainer/tester on Windows 11:** v1.2.3 clean install with system AppX volume as default, upgrade from v1.2.2 with saved ordering/configuration, multi-select ZIP/7Z, other menu commands, English custom confirmation buttons, UAC/consent refusal, uninstall and optional certificate trust retention/removal. The signed MSIX and installed files were compared with the tested release build. See the [v1.2.3 release checklist](docs/RELEASE_CHECKLIST-v1.2.3.md).
 
 **Known behavior:** Windows may list two entries, **PeaZip Modern Menu** (MSIX) and **PeaZip Modern Shell Extension – Community Companion** (Inno Setup). To remove both components and optionally revoke trust, **uninstall the Community Companion entry**. See [INSTALL.md](INSTALL.md).
 
-The extension does not remove Windows' built-in **Compress to** command. The archive recognition is based on filename extensions; virtual shell items are not supported, and large selections are subject to Windows command-line limits. Current installer is **per-user only**; all-users MSIX provisioning is a possible future release, not a v1.2.2 feature.
+The extension does not remove Windows' built-in **Compress to** command. The archive recognition is based on filename extensions; virtual shell items are not supported, and large selections are subject to Windows command-line limits. Current installer is **per-user only**; all-users MSIX provisioning is a possible future release, not a v1.2.3 feature.
 
 ## License and relationship to PeaZip
 

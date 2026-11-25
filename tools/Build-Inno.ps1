@@ -3,7 +3,7 @@
 param([string]$IsccPath)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
-$msix = Join-Path $root 'out\PeaZip.ModernMenu.Community_1.2.2.0_x64.msix'
+$msix = Join-Path $root 'out\PeaZip.ModernMenu.Community_1.2.3.0_x64.msix'
 if (-not (Test-Path -LiteralPath $msix)) { throw 'MSIX not found. Run tools\Build-MSIX.ps1 first.' }
 if (-not (Test-Path -LiteralPath (Join-Path $root 'out\PeaZipModernMenuCommunity.cer'))) {
     throw 'Missing public signing certificate. Build with -SignMode Community and -CertThumbprint. Development builds cannot be shipped with this installer.'
@@ -47,4 +47,4 @@ Write-Host ("Certificate pin (SHA-256 DER): $certRawSHA")
 Write-Host ("MSIX pin (SHA-256 file):    $msixSHA")
 & $IsccPath "-dExpectedCertSha256=$certRawSHA" "-dExpectedMsixSha256=$msixSHA" $iss
 if ($LASTEXITCODE -ne 0) { throw 'Inno Setup compilation failed.' }
-Write-Host ('Installer output: ' + (Join-Path $root 'out\installer\PeaZip-ModernMenu-Setup-v1.2.2.exe'))
+Write-Host ('Installer output: ' + (Join-Path $root 'out\installer\PeaZip-ModernMenu-Setup-v1.2.3.exe'))

@@ -1,4 +1,4 @@
-# Signing and distribution: v1.2.2 community installer
+# Signing and distribution: v1.2.3 community installer
 
 This project is **not a CA-signed or Microsoft Store release**. This plan provides a transparent, consent-based *self-signed* community distribution for advanced users who explicitly trust the publisher and understand the risk.
 
@@ -13,7 +13,7 @@ The MSIX must already be signed before it can be installed. A newly created cert
 1. Run `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\New-CommunitySigningCertificate.ps1` **once**, then safely record the SHA-1 thumbprint printed. The non-exportable private key remains in `Cert:\CurrentUser\My` on the build PC. If an existing matching cert is being reused intentionally, do not generate another.
 2. `tools\Build-x64.cmd -SignMode Community -CertThumbprint <THUMBPRINT>`.
 3. `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\Build-Inno.ps1`.
-4. The source build produces `out\PeaZip.ModernMenu.Community_1.2.2.0_x64.msix`, `out\PeaZipModernMenuCommunity.cer` (PUBLIC ONLY), and `out\installer\PeaZip-ModernMenu-Setup-v1.2.2.exe`.
+4. The source build produces `out\PeaZip.ModernMenu.Community_1.2.3.0_x64.msix`, `out\PeaZipModernMenuCommunity.cer` (PUBLIC ONLY), and `out\installer\PeaZip-ModernMenu-Setup-v1.2.3.exe`.
 5. Verify signatures with SignTool and test *the exact installer* on a clean Windows 11 x64 VM with no pre-trusted signing certificate before publishing. Test consent refusal, refusal of UAC, successful import, update from 1.2.1, uninstall cert cleanup, and another Windows user who still needs the package.
 6. Release `Setup.exe` and public `.cer` (optional transparency artifact), plus SHA-256 checksums. **Never publish `.pfx`, `.key`, signing credentials, or copy the private key**. Do not bundle Windows SDK SignTool.
 
@@ -48,4 +48,4 @@ The public cert can be removed by the elevated helper only if the installer had 
 
 ## Release artifact staging
 
-After successfully building and testing the Inno installer, run `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\Prepare-Binary-Release.ps1`. Only the public `.cer` and installer EXE, plus `SHA256SUMS.txt`, will be copied to `out\release-v1.2.2`. Never attach the builder's private key or PFX to GitHub.
+After successfully building and testing the Inno installer, run `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\Prepare-Binary-Release.ps1`. Only the public `.cer` and installer EXE, plus `SHA256SUMS.txt`, will be copied to `out\release-v1.2.3`. Never attach the builder's private key or PFX to GitHub.

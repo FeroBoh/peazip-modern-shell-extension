@@ -19,4 +19,5 @@ jobs:
           python tests/test_maintenance_patch.py
           python tests/test_community_distribution.py
           python tests/test_certificate_pinning.py
+          python tests/test_v123_minimal_baseline.py
           python tools/check_source_release.py
