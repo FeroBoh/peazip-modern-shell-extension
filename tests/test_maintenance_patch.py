@@ -1,4 +1,4 @@
-"""Static regression checks for v1.2.1 installer/upgrade/uninstall maintenance.
+"""Static regression checks for v1.2.2 installer/upgrade/uninstall maintenance.
 
 Requires no Windows tooling. Real Windows deployment is still necessary.
 """
@@ -16,9 +16,9 @@ identity = manifest.find(ns + 'Identity').attrib
 
 assert identity['Name'] == 'PeaZip.ModernMenu.Community'
 assert identity['Publisher'] == 'CN=PeaZipModernMenuLocal'
-assert identity['Version'] == '1.2.1.0'
-assert '#define MyVersion "1.2.1"' in installer
-assert '#define MsixName "PeaZip.ModernMenu.Community_1.2.1.0_x64.msix"' in installer
+assert identity['Version'] == '1.2.2.0'
+assert '#define MyVersion "1.2.2"' in installer
+assert '#define MsixName "PeaZip.ModernMenu.Community_1.2.2.0_x64.msix"' in installer
 assert 'ArchitecturesAllowed=x64os' in installer
 assert 'PrivilegesRequired=lowest' in installer
 assert 'PrepareToInstall' in installer and 'CurStepChanged' not in installer

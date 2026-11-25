@@ -8,11 +8,11 @@
          IgnorableNamespaces="uap desktop4 desktop5 com rescap">
   <Identity Name="PeaZip.ModernMenu.Community"
             Publisher="CN=PeaZipModernMenuLocal"
-            Version="1.2.1.0"
+            Version="1.2.2.0"
             ProcessorArchitecture="x64" />
   <Properties>
     <DisplayName>PeaZip Modern Menu - Community Companion</DisplayName>
-    <PublisherDisplayName>Local Community Build</PublisherDisplayName>
+    <PublisherDisplayName>Community Companion</PublisherDisplayName>
     <Description>Modern Explorer menu for a separately installed PeaZip</Description>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>

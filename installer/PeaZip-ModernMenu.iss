@@ -1,10 +1,18 @@
-; PeaZip Modern Shell Extension v1.2.1 (upgrade/uninstall hardening)
+﻿; PeaZip Modern Shell Extension v1.2.2 (community signing consent and cleanup)
 ; Independent per-user companion. Does not bundle or modify PeaZip itself.
 ; MSIX registration occurs in PrepareToInstall, before Inno copies its files.
-#define MyName "PeaZip Modern Menu - Community Companion"
-#define MyVersion "1.2.1"
+#define MyName "PeaZip Modern Shell Extension - Community Companion"
+#define MyVersion "1.2.2"
 #define MyAppId "{{DE451A2C-E3B1-410D-AC5A-1FC0C683FA48}"
-#define MsixName "PeaZip.ModernMenu.Community_1.2.1.0_x64.msix"
+#define MsixName "PeaZip.ModernMenu.Community_1.2.2.0_x64.msix"
+; Build-Inno.ps1 injects these two SHA-256 pins into the compiled EXE.
+; They are NEVER read from the certificate or MSIX at installation time.
+#ifndef ExpectedCertSha256
+  #error ExpectedCertSha256 not supplied: compile using tools\Build-Inno.ps1
+#endif
+#ifndef ExpectedMsixSha256
+  #error ExpectedMsixSha256 not supplied: compile using tools\Build-Inno.ps1
+#endif
 
 [Setup]
 AppId={#MyAppId}
@@ -22,7 +30,7 @@ Compression=lzma2
 SolidCompression=yes
 UninstallDisplayIcon={app}\PeaZipMenuConfig.exe
 OutputDir=..\out\installer
-OutputBaseFilename=PeaZip-ModernMenu-Setup-v1.2.1
+OutputBaseFilename=PeaZip-ModernMenu-Setup-v1.2.2
 CloseApplications=yes
 RestartApplications=no
 ChangesAssociations=yes
@@ -33,12 +41,16 @@ ChangesAssociations=yes
 Source: "..\out\{#MsixName}"; DestName: "Preinstall-Companion.msix"; Flags: dontcopy noencryption
 Source: "..\out\stage\AppxManifest.xml"; DestName: "Preinstall-AppxManifest.xml"; Flags: dontcopy noencryption
 Source: "..\tools\Install-Companion.ps1"; DestName: "Preinstall-Companion.ps1"; Flags: dontcopy noencryption
+Source: "..\tools\Trust-CompanionCertificate.ps1"; DestName: "Preinstall-Trust.ps1"; Flags: dontcopy noencryption
+Source: "..\out\PeaZipModernMenuCommunity.cer"; DestName: "Preinstall-Community.cer"; Flags: dontcopy noencryption
 ; Persist normal installer assets only AFTER MSIX registration succeeds.
 Source: "..\out\{#MsixName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\out\stage\AppxManifest.xml"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\out\stage\PeaZipMenuConfig.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\tools\Install-Companion.ps1"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\tools\Uninstall-Companion.ps1"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\tools\Trust-CompanionCertificate.ps1"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\out\PeaZipModernMenuCommunity.cer"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
@@ -49,6 +61,68 @@ Name: "{userprograms}\PeaZip Modern Menu\Uninstall"; Filename: "{uninstallexe}"
 Filename: "{app}\PeaZipMenuConfig.exe"; Description: "Configure PeaZip context menu"; Flags: nowait postinstall skipifsilent
 
 [Code]
+var
+  CertPage: TWizardPage;
+  ConsentBox: TNewCheckBox;
+  ConsentExitApproved: Boolean;
+
+procedure InitializeWizard();
+var
+  Info: TNewStaticText;
+begin
+  CertPage := CreateCustomPage(wpSelectDir, 'Community signing certificate',
+    'Explicit consent is required before installing this unsigned-publisher community companion.');
+  Info := TNewStaticText.Create(CertPage);
+  Info.Parent := CertPage.Surface;
+  Info.Left := 0;
+  Info.Top := ScaleY(5);
+  Info.Width := CertPage.SurfaceWidth;
+  Info.Height := ScaleY(160);
+  Info.AutoSize := False;
+  Info.WordWrap := True;
+  Info.Caption := 'This unsigned-publisher installer includes a signed MSIX and its PUBLIC, self-signed code-signing certificate.' + #13#10 +
+    'With your consent and separate administrator UAC approval, only this certificate will be trusted in LocalMachine\TrustedPeople (NOT Trusted Root).' + #13#10 +
+    'Trust may also apply to OTHER packages signed with this same key. No private key is distributed.' + #13#10 +
+    'The installer verifies the exact SHA-256 fingerprint pinned at build time BEFORE import.' + #13#10 +
+    'Certificate SHA-256: {#ExpectedCertSha256}';
+  ConsentBox := TNewCheckBox.Create(CertPage);
+  ConsentBox.Parent := CertPage.Surface;
+  ConsentBox.Left := 0;
+  ConsentBox.Top := ScaleY(172);
+  ConsentBox.Width := CertPage.SurfaceWidth;
+  ConsentBox.Caption := 'I understand and consent to trusting this community certificate if needed';
+  ConsentBox.Checked := False;
+end;
+
+// Inno Setup: returning False from NextButtonClick only blocks the page transition.
+// Exit is user-confirmed and routed through the normal Cancel workflow.
+procedure CancelButtonClick(CurPageID: Integer; var Cancel, Confirm: Boolean);
+begin
+  if ConsentExitApproved then
+  begin
+    Cancel := True;
+    Confirm := False; // The user already confirmed exit in NextButtonClick.
+  end;
+end;
+
+function NextButtonClick(CurPageID: Integer): Boolean;
+begin
+  Result := True;
+  if (CurPageID = CertPage.ID) and (not ConsentBox.Checked) then
+  begin
+    Result := False;
+    if MsgBox(
+      'You have not agreed to trust the community signing certificate.' + #13#10 +
+      'Without your consent, this extension cannot be installed.' + #13#10 + #13#10 +
+      'Do you want to exit Setup now?',
+      mbConfirmation, MB_YESNO or MB_DEFBUTTON1) = IDYES then
+    begin
+      ConsentExitApproved := True;
+      WizardForm.Close;
+    end;
+  end;
+end;
+
 function RunPS(const ScriptPath, ManifestPath, PackagePath, Extra: String): Boolean;
 var
   ResultCode: Integer;
@@ -80,6 +154,8 @@ begin
     ExtractTemporaryFile('Preinstall-Companion.msix');
     ExtractTemporaryFile('Preinstall-AppxManifest.xml');
     ExtractTemporaryFile('Preinstall-Companion.ps1');
+    ExtractTemporaryFile('Preinstall-Trust.ps1');
+    ExtractTemporaryFile('Preinstall-Community.cer');
   except
     Result := 'Could not extract the MSIX installation prerequisites: ' +
       GetExceptionMessage;
@@ -87,7 +163,9 @@ begin
   end;
   if not RunPS(TempDir + 'Preinstall-Companion.ps1',
                TempDir + 'Preinstall-AppxManifest.xml',
-               TempDir + 'Preinstall-Companion.msix', '') then
+               TempDir + 'Preinstall-Companion.msix',
+               ' -CertificatePath "' + TempDir + 'Preinstall-Community.cer" -TrustHelperPath "' + TempDir + 'Preinstall-Trust.ps1"' +
+               ' -ExpectedCertSha256 "{#ExpectedCertSha256}" -ExpectedMsixSha256 "{#ExpectedMsixSha256}" -AllowTrustImport') then
   begin
     Result := 'MSIX installation or update failed. No companion files have been installed by this setup attempt.' + #13#10 +
       'Windows may be using an older Explorer extension, or the MSIX signing certificate is not trusted.' + #13#10 +
@@ -108,6 +186,14 @@ begin
                'Choose No to preserve them for a later reinstall.',
                mbConfirmation, MB_YESNO) = IDYES) then
       Extra := ' -RemoveSettings';
+    if (not UninstallSilent) and
+       (MsgBox('Remove this companion installer-managed community certificate from Windows TrustedPeople, if no other user requires it?' + #13#10 +
+               'A Windows administrator UAC prompt may be shown. Certificates not imported by this installer will not be removed.',
+               mbConfirmation, MB_YESNO) = IDYES) then
+      Extra := Extra + ' -RemoveTrust';
+    Extra := Extra + ' -CertificatePath "' + ExpandConstant('{app}\PeaZipModernMenuCommunity.cer') +
+      '" -TrustHelperPath "' + ExpandConstant('{app}\Trust-CompanionCertificate.ps1') +
+      '" -ExpectedCertSha256 "{#ExpectedCertSha256}"';
     if not RunPS(ExpandConstant('{app}\Uninstall-Companion.ps1'),
                  ExpandConstant('{app}\AppxManifest.xml'), '', Extra) then
     begin

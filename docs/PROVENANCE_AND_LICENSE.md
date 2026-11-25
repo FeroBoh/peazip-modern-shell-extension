@@ -10,7 +10,7 @@ The current MIT copyright notice uses the collective name **PeaZip Modern Shell 
 
 [PeaZip](https://github.com/peazip/PeaZip) is developed by Giorgio Tani and is distributed separately under **LGPL-3.0**. This companion does **not** bundle or redistribute the PeaZip executable, archive backends, or PeaZip's context-menu icon files. It invokes the PeaZip command-line interface and uses menu icon resources from the user's own installed or unpacked PeaZip instance at runtime. PeaZip code, icons, names, and other protected material remain subject to their respective licenses and rights.
 
-The three images under `packaging/Assets` serve as **package/identity images**, rather than copies of PeaZip's context-menu icons. Their availability online (or lack thereof) does not establish copyright ownership; the publisher should confirm that they may be redistributed. The eight user-supplied screenshots in `screenshots/` document the software and may depict third-party user interfaces or marks. They are not a transfer of those third-party rights.
+The three images under `packaging/Assets` are package identity images. In v1.2.2 they contain resized versions of the supplied PeaZip logo, rather than the classic PeaZip context-menu icons. The publisher should confirm that these logo files may be redistributed. The eight user-supplied screenshots in `screenshots/` document the software and may depict third-party user interfaces or marks. They are not a transfer of those third-party rights.
 
 ## AI-assisted development
 
@@ -22,6 +22,11 @@ This disclosure credits the assistance received; **it does not mean that OpenAI 
 
 - Windows Shell and MSIX APIs are Microsoft platform interfaces, not copied software covered by this MIT license.
 - Inno Setup is an external compiler/tool with its own license; review its distribution and commercial-use requirements as appropriate.
-- Certificates, PFX files, private keys, signed test MSIX packages, and test EXE installers must not be committed as trusted public release materials. See [`SIGNING_AND_DISTRIBUTION.md`](SIGNING_AND_DISTRIBUTION.md).
+- Private keys, PFX/P12 files and test signing credentials must never be committed. A **public** `.cer` may be released alongside a self-signed community installer after appropriate review and testing, but is not a publicly trusted signing identity. See [`SIGNING_AND_DISTRIBUTION.md`](SIGNING_AND_DISTRIBUTION.md).
 
 **Independence notice:** Not affiliated with, sponsored by, or endorsed by Giorgio Tani, PeaZip, or OpenAI.
+
+
+## Branding for v1.2.2
+
+The three packaging PNG assets have been replaced by faithful resized copies of the PeaZip logo **supplied by the project contributor** (`StoreLogo.scale-100.png` and `StoreLogo.scale-400.png`). The PeaZip name and logo are associated with the upstream PeaZip project; inclusion in this unofficial community companion does **not** imply upstream endorsement or transfer of trademark rights. Confirm applicable logo redistribution permissions before public binary release. This project does not redistribute PeaZip's classic context-menu icon library.

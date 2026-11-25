@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.2 — Community installer candidate (NOT yet Windows-tested)
+
+- Maintainer-side stable community signing certificate, public leaf bundled with installer.
+- Explicit opt-in certificate consent and separate UAC trust action.
+- Optional uninstall-time removal of installer-managed trust, guarded against other Windows users.
+- PeaZip logo supplied by the contributor now used for MSIX visual assets.
+- Existing COM shell commands and configuration are unchanged from tested 1.2.1.
+
 ## 1.2.1 — verified community release candidate (2026-11-24 status)
 
 **User-tested on Windows 11 26H2 with PeaZip 11.4.0:**

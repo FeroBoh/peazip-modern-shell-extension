@@ -1,30 +1,51 @@
-# Signing and distribution policy
+# Signing and distribution: v1.2.2 community installer
 
-**Do not publish a development-signed installer as a trusted official release.**
+This project is **not a CA-signed or Microsoft Store release**. This plan provides a transparent, consent-based *self-signed* community distribution for advanced users who explicitly trust the publisher and understand the risk.
 
-## Existing development build
+## Why not generate a certificate on each user's PC?
 
-`Build-MSIX.ps1` defaults to `LocalTest`, which creates or reuses a self-signed certificate with subject `CN=PeaZipModernMenuLocal` in `Cert:\CurrentUser\My` and signs the test MSIX. Exported `.cer` files contain a **public certificate**, not a private key; nevertheless, exclude these test trust anchors from a public source/release ZIP to avoid confusing users.
+The MSIX must already be signed before it can be installed. A newly created certificate on a client PC cannot sign the supplied MSIX without a signing utility such as the Windows SDK SignTool, which is **not** generally present and is not automatically redistributable. Generating a new client key on every upgrade also breaks repeatable trust, complicates renewal and adds avoidable risk. Use one dedicated maintainer-side signing key for successive releases.
 
-The Inno Setup installer explicitly does **not** install arbitrary trust roots or bypass Windows' deployment checks. A fresh machine without the locally trusted certificate will reject this test MSIX. This is intentional.
+## First community signing build (maintainer PC)
 
-## Production signing
+**Preserving identity:** The publisher stays `CN=PeaZipModernMenuLocal` for compatibility with earlier packages. This legacy publisher name does **not** mean the key is automatically trusted.
 
-1. Agree on the maintainer / legal publisher identity. Obtain a code-signing certificate trusted by the target Windows devices, or use Microsoft's Artifact Signing service (and timestamp signing). **Never commit PFX/P12 files, private keys, credential files, personal tokens or certificate passwords**.
-2. Use `tools\Build-x64.cmd -SignMode Production -CertThumbprint <sha1-thumbprint> [-CertStore CurrentUser|LocalMachine] -TimestampUrl <rfc3161-url>` with a supported signing setup. `Build-MSIX.ps1` updates the manifest publisher to the certificate's actual Subject.
-3. Verify the generated MSIX signature, identity/publisher and expiry/timestamp with `signtool verify /pa /v` on a clean test machine.
-4. Configure a signing step for the **outer Inno Setup EXE** too. The current Inno Setup script does **not** automatically sign its own output. Do not label the EXE 'official' or 'trusted' until signed and verified.
-5. Run clean-machine tests on a Windows profile which never trusted the local development certificate.
-6. Perform an intentional migration plan from developer publisher to the chosen production publisher; these package families cannot be silently treated as the same MSIX update.
-7. Publish SHA-256 checksums of release assets and review/update certificate-renewal and timestamping policy.
+1. Run `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\New-CommunitySigningCertificate.ps1` **once**, then safely record the SHA-1 thumbprint printed. The non-exportable private key remains in `Cert:\CurrentUser\My` on the build PC. If an existing matching cert is being reused intentionally, do not generate another.
+2. `tools\Build-x64.cmd -SignMode Community -CertThumbprint <THUMBPRINT>`.
+3. `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\Build-Inno.ps1`.
+4. The source build produces `out\PeaZip.ModernMenu.Community_1.2.2.0_x64.msix`, `out\PeaZipModernMenuCommunity.cer` (PUBLIC ONLY), and `out\installer\PeaZip-ModernMenu-Setup-v1.2.2.exe`.
+5. Verify signatures with SignTool and test *the exact installer* on a clean Windows 11 x64 VM with no pre-trusted signing certificate before publishing. Test consent refusal, refusal of UAC, successful import, update from 1.2.1, uninstall cert cleanup, and another Windows user who still needs the package.
+6. Release `Setup.exe` and public `.cer` (optional transparency artifact), plus SHA-256 checksums. **Never publish `.pfx`, `.key`, signing credentials, or copy the private key**. Do not bundle Windows SDK SignTool.
 
-The `LocalTest` mode must not be used in a public binary release, and `Unsigned` mode is useful for build inspection only (Windows normally refuses unsigned MSIX deployment).
+IMPORTANT: Selecting a NEW certificate while preserving the same Publisher is still a signing-key change. Test in-place MSIX updates against earlier keys. If incompatible, document a manual migration rather than silently uninstalling an older release.
 
-## Additional notes
+## SHA-256 binding of a release installer
 
-- Inno Setup 7 has commercial-use licensing conditions; consult its official terms before using the compiler in a commercial setting. This repository **does not embed Inno Setup**.
-- Package identity, shell registration and app-extension enablement settings may be cached by Windows Explorer; upgrade instructions must communicate that Windows may terminate Explorer/COM host processes.
-- Updating binaries during existing sessions is supported through `Add-AppxPackage -ForceTargetApplicationShutdown`, but unattended deploys, reboots and error recovery need separate tests.
-- Keep test trust certificates installed on test environments only. Removing an actively used certificate without a recovery plan will prevent updates.
+`tools/Build-Inno.ps1` calculates the SHA-256 of the exported public DER `.cer` and of the FINAL signed `.msix`, then embeds **both expected 64-character hashes in the compiled Inno Setup EXE**. Building the `.iss` directly without these compiler definitions is rejected.
 
-Microsoft references: https://learn.microsoft.com/en-us/windows/msix/package/sign-msix-package-guide and https://learn.microsoft.com/en-us/windows/msix/msix-troubleshooting-guide
+At install time, BEFORE any UAC elevation or certificate import, `Install-Companion.ps1` compares the extracted certificate's file SHA-256 **and** its parsed DER SHA-256 to the pinned value, and compares the signed MSIX file SHA-256 to its own pin. The signer identity in the MSIX is also compared to that exact certificate. The elevated `Trust-CompanionCertificate.ps1` independently rechecks the certificate SHA-256, rejects CA certificates, requires the Code Signing EKU, and imports the already-verified in-memory certificate object (not a fresh read of the file). Before removing any managed trust entry, it also checks that the currently installed certificate has the pinned SHA-256. A SHA-1 Windows certificate thumbprint is still used as the certificate *store locator*; it is NOT used as the security pin.
+
+During uninstall, only a certificate marked as installed by this companion, with the exact same recorded SHA-256, is eligible for removal. The helper refuses automatic cleanup when any Windows account still has an MSIX package with the same publisher, or when the trust was already present before this installer ran. To avoid race conditions, do not change the certificate file or extracted installers while installation is in progress.
+
+**Important:** A compiled-in fingerprint protects against accidental certificate/package substitution after the installer is built; it does **not** make an unsigned Inno Setup EXE a trusted publisher. The EXE and checksum must still be obtained from a trusted channel, and a local administrator can always modify the machine trust store.
+
+## Transparent trust
+
+The installer requires an unchecked opt-in checkbox before any MSIX installation. With permission, an elevated helper imports only the code-signing leaf into `LocalMachine\TrustedPeople`. It records whether **this installer** imported it, so uninstall does not remove unrelated/pre-existing trust. Package registration still runs as the user who invoked the installer.
+
+TrustedPeople is NOT Trusted Root Certification Authorities. A self-signed signing certificate is nevertheless a powerful trust grant: Windows may accept other packages signed by that same key. The installer cannot prove its own origin because its EXE is not CA-signed. Tell users to obtain it from the known GitHub release and verify checksums. No silent trust import or bypass of Windows signature validation.
+
+## Uninstall limits
+
+The public cert can be removed by the elevated helper only if the installer had imported it and no Windows account still has this package registered. A cert trusted manually before installation is left alone. Uninstall asks for consent before trying the removal. Machine-wide trust may affect more than one account; the helper errs on the side of retaining trust when there is a detected dependency. Installation also attempts rollback of newly imported trust if deployment fails, but UAC cancellation can prevent this cleanup; the log explains manual remediation.
+
+## Windows/Microsoft sources
+
+- https://learn.microsoft.com/en-us/windows/msix/msix-troubleshooting-guide
+- https://learn.microsoft.com/en-us/windows/msix/package/create-certificate-package-signing
+- https://learn.microsoft.com/en-us/windows/apps/dev-tools/winapp-cli/security
+- https://learn.microsoft.com/en-us/windows/desktop/seccrypto/signtool
+
+## Release artifact staging
+
+After successfully building and testing the Inno installer, run `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\Prepare-Binary-Release.ps1`. Only the public `.cer` and installer EXE, plus `SHA256SUMS.txt`, will be copied to `out\release-v1.2.2`. Never attach the builder's private key or PFX to GitHub.

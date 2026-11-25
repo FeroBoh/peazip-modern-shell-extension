@@ -17,4 +17,6 @@ jobs:
           python tests/test_architecture_build.py
           python tests/test_inno_preprocessor.py
           python tests/test_maintenance_patch.py
+          python tests/test_community_distribution.py
+          python tests/test_certificate_pinning.py
           python tools/check_source_release.py

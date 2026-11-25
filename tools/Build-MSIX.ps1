@@ -2,7 +2,7 @@
 # Requires VS x64 Developer Command Prompt and Windows SDK.
 [CmdletBinding()]
 param(
-    [ValidateSet('LocalTest','Production','Unsigned')][string]$SignMode = 'LocalTest',
+    [ValidateSet('LocalTest','Community','Production','Unsigned')][string]$SignMode = 'LocalTest',
     [string]$CertThumbprint,
     [ValidateSet('CurrentUser','LocalMachine')][string]$CertStore = 'CurrentUser',
     [string]$TimestampUrl,
@@ -14,7 +14,7 @@ $root = Split-Path -Parent $PSScriptRoot
 $out = Join-Path $root 'out'
 $stage = Join-Path $out 'stage'
 $obj = Join-Path $out 'obj'
-$version = '1.2.1.0'
+$version = '1.2.2.0'
 $pkg = Join-Path $out "PeaZip.ModernMenu.Community_${version}_x64.msix"
 
 function Need-Command([string]$name) {
@@ -38,6 +38,8 @@ Write-Host "Verified x64 MSVC toolchain: $compiler"
 $makeappx = Need-Command 'makeappx.exe'
 if ($SignMode -ne 'Unsigned') { $signTool = Need-Command 'signtool.exe' }
 
+$communityCer = Join-Path $out 'PeaZipModernMenuCommunity.cer'
+if ($SignMode -ne 'Community' -and (Test-Path $communityCer)) { Remove-Item $communityCer -Force }
 $signingCert = $null
 $publisher = 'CN=PeaZipModernMenuLocal'
 if ($SignMode -eq 'LocalTest') {
@@ -49,6 +51,18 @@ if ($SignMode -eq 'LocalTest') {
         $signingCert = New-SelfSignedCertificate -Type CodeSigningCert -Subject $publisher `
              -KeyAlgorithm RSA -KeyLength 2048 -HashAlgorithm SHA256 -CertStoreLocation Cert:\CurrentUser\My
     }
+} elseif ($SignMode -eq 'Community') {
+    # Community builds require the maintainer to choose one stable signing key.
+    # Do not generate or rotate a key silently when publishing an update.
+    if (-not $CertThumbprint) { throw 'Community signing requires -CertThumbprint. Use tools\New-CommunitySigningCertificate.ps1 once on the maintainer PC.' }
+    $thumbprint = $CertThumbprint.Replace(' ','').ToUpperInvariant()
+    $signingCert = Get-ChildItem Cert:\CurrentUser\My |
+        Where-Object { $_.Thumbprint -eq $thumbprint } | Select-Object -First 1
+    if (-not $signingCert -or -not $signingCert.HasPrivateKey -or $signingCert.Subject -ne $publisher -or
+        $signingCert.NotBefore -gt (Get-Date) -or $signingCert.NotAfter -le (Get-Date)) {
+        throw 'Selected community certificate is unavailable, has an unexpected publisher, or cannot sign.'
+    }
+    Write-Host ('Community signing key SHA1: ' + $signingCert.Thumbprint)
 } elseif ($SignMode -eq 'Production') {
     if (-not $CertThumbprint) { throw 'Production signing requires -CertThumbprint of an installed code-signing certificate.' }
     $storePath = if ($CertStore -eq 'LocalMachine') { 'Cert:\LocalMachine\My' } else { 'Cert:\CurrentUser\My' }
@@ -96,6 +110,10 @@ if ($SignMode -ne 'Unsigned') {
     $signArgs += $pkg
     & $signTool @signArgs
     if ($LASTEXITCODE -ne 0) { throw 'SignTool failed.' }
+    if ($SignMode -eq 'Community') {
+        Export-Certificate -Cert $signingCert -FilePath (Join-Path $out 'PeaZipModernMenuCommunity.cer') -Force | Out-Null
+        Write-Host 'Exported public community certificate (private key stays on the build PC).'
+    }
     if ($SignMode -eq 'LocalTest') {
         Export-Certificate -Cert $signingCert -FilePath (Join-Path $out 'PeaZipModernMenuLocal.cer') -Force | Out-Null
         Write-Warning 'Development certificate only. Do not distribute this as a production trust anchor.'

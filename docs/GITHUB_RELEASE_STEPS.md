@@ -1,34 +1,39 @@
-# GitHub publication steps (once release gates pass)
+# Publishing v1.2.2 to GitHub (maintainer)
 
-This source folder is **ready for a private review repository**. Do not publish signed installers or label the release production-ready until the release checklist is complete.
+Keep the old `v1.2.1-rc1` tag and release unchanged.
 
-## 1. Create an independent repository
+## 1. Prepare repository source
 
-Pick an independent name, for example `peazip-modern-menu-companion`. The repository must **not** impersonate the official `peazip/PeaZip` project. A plain Git repository can be initialized from the unpacked ZIP:
+Update the project source for v1.2.2 and include the new docs:
 
-```bat
-git init
-git add .
-git commit -m "Prepare independent PeaZip Modern Menu v1.2.1 source candidate"
+- `README.md` — overview and download link
+- `INSTALL.md` — for regular users
+- `BUILDING.md` — for developers and maintainers
+- `RELEASE_NOTES-v1.2.2.md` — stable release text
+- `tools/Verify-Release-Bundle.ps1` — read-only release integrity checks
+
+Make sure the checked-in source contains no `out/`, generated installer binaries, developer certificates with private keys, `.pfx`, or secrets. Confirm the eight original screenshots are unchanged.
+
+## 2. Verify and freeze tested binary artifacts
+
+From the project root on the maintainer's Windows PC:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\Verify-Release-Bundle.ps1 -ProjectDir . -ReleaseDir .\out\release-v1.2.2 -CheckInstalledFiles
 ```
 
-Create a remote repository using your GitHub account and push it. Do not commit the contents of `out/`, certificates, installer binaries, user-specific logs or personal identifiers.
+Run the `-CheckInstalledFiles` check after an install of the **same final EXE** under the same user. If the EXE has changed (e.g. Inno UX code was edited), re-run `Build-Inno.ps1`, `Prepare-Binary-Release.ps1`, then the final install/verification sequence. Compare the published SHA256SUMS file against actual release bytes. Review `docs/RELEASE_CHECKLIST.md` for any remaining untested release gates; do not claim those were completed.
 
-## 2. Verify documentation and rights
+## 3. Publish new stable release
 
-- Replace the generic copyright placeholder in `LICENSE` with a confirmed, accurate attribution.
-- Confirm rights for `packaging/Assets` and the eight tester-supplied PNG files in `screenshots/`. These are the only screenshots in the source archive; retain all eight without duplicate copies. Revise or remove any assets whose permissions are unresolved.
-- Keep the project **unofficial** until the original maintainers accept any code.
-- Make sure `docs/RELEASE_CHECKLIST.md` accurately reflects test evidence.
+1. In GitHub Desktop, commit and push the v1.2.2 source changes to `main`.
+2. In GitHub Releases create tag **`v1.2.2`** targeting the reviewed commit.
+3. Title: **PeaZip Modern Shell Extension v1.2.2**; do **not** check *Pre-release*; mark as *Latest* if the option is offered.
+4. Paste the content of `RELEASE_NOTES-v1.2.2.md` into the Release description.
+5. Upload exactly the tested `PeaZip-ModernMenu-Setup-v1.2.2.exe`, `PeaZipModernMenuCommunity.cer` and `SHA256SUMS.txt` from `out\release-v1.2.2`.
+6. GitHub automatically provides source ZIP/TAR archives. Do **not** upload `PFX`/private keys or PeaZip binaries.
+7. Check the public release links, hashes, download text and installation instructions before announcing the release.
 
-## 3. Source-only preview
+## 4. Upstream contact
 
-An optional first release can be marked **pre-release / source preview** with the source ZIP. To create a reproducible source archive and a `.sha256` sidecar on any system with Python 3, run `python tools/Make-Source-Release.py` from the project root. Do not attach a developer-signed `.msix` or `.exe` as a publicly trusted installer. A source archive generated from this repository can be accompanied by a SHA-256 checksum file.
-
-## 4. Production binary release (later)
-
-After obtaining a suitable production signing identity, build with `-SignMode Production`, timestamp and verify the MSIX, sign and verify the outer setup EXE, and test on a clean device. Confirm migration from any dev package publisher to the new production publisher and re-run the complete install/uninstall matrix.
-
-## 5. Contact PeaZip upstream
-
-Review https://github.com/peazip/PeaZip/blob/sources/CONTRIBUTING.md and present the source-only prototype using `docs/UPSTREAM_PROPOSAL.md` as a starting draft. Ask if the maintainers would prefer an opt-in independently distributed companion or a different internal structure before opening a large pull request.
+Send Giorgio the new download link only after the binary release has been tested and published. Mention the optional self-signed trust model and how a regular user can install the companion without developer tools.

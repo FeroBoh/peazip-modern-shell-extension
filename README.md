@@ -1,20 +1,32 @@
 # PeaZip Modern Shell Extension — Community Companion
 
-**Independent, unofficial Windows 11 Explorer extension for [PeaZip](https://peazip.github.io/).**  
-**Source release candidate:** `v1.2.1` · Windows 11 x64, user-tested on 26H2 · PeaZip 11.4.0
+**Independent, unofficial Windows 11 context-menu extension for [PeaZip](https://peazip.github.io/).**  
+**Release:** `v1.2.2` · Windows 11 x64 · PeaZip 11.4.0 (installed or Portable)
 
-This project registers an `IExplorerCommand` COM shell extension using a signed MSIX package, while leaving PeaZip itself installed or unpacked *outside* the package. An optional, **per-user Inno Setup** installer manages companion files and MSIX registration. PeaZip's existing CLI performs all archive operations: **PeaZip is not forked, modified, or redistributed here.**
+Provides a native PeaZip submenu in the modern Windows 11 File Explorer context menu through `IExplorerCommand` and a signed MSIX component. The companion uses PeaZip's existing command-line interface and **does not bundle, modify, or replace PeaZip**.
 
-> **Community status:** Not affiliated with or endorsed by the PeaZip maintainers. The source tree is prepared for review, **not a publicly signed, universally installable binary release**. The source archive includes no certificates, private keys, generated installers or PeaZip binaries. See [Release checklist](docs/RELEASE_CHECKLIST.md).
+> **Community signing notice:** The ready-made setup EXE is not signed by a publicly trusted publisher. It bundles a self-signed MSIX and its **public** certificate. Setup explicitly asks for consent before adding that certificate to `LocalMachine\TrustedPeople`; administrator approval may also be required. This trusts other packages signed by the same key. **Do not proceed unless you trust this project and the download source.** No private signing key is shipped.
+
+## Download and install (recommended)
+
+**You do not need Visual Studio, Windows SDK, Inno Setup or PowerShell development commands.**
+
+1. Visit **[GitHub Releases](https://github.com/FeroBoh/peazip-modern-shell-extension/releases/latest)** and download `PeaZip-ModernMenu-Setup-v1.2.2.exe` and `SHA256SUMS.txt`.
+2. Compare the setup EXE's SHA-256 with the published value (instructions in [INSTALL.md](INSTALL.md)). Check the release page and repository carefully; a checksum on the same page is an integrity check, not independent publisher authentication.
+3. Have **PeaZip installed**, or unpack **PeaZip Portable** separately.
+4. Run the EXE under your normal Windows account. Read the self-signed certificate warning and consent only if you accept the security implications. If requested, approve UAC to trust the **public leaf** certificate (not a root CA).
+5. In Windows 11 26H2, enable the extension if needed under **Settings → Personalization → Context menu → Application extensions**. Configure menu entries from the Start menu shortcut **PeaZip Modern Menu → Configure menu**. For Portable, browse to its `peazip.exe`.
+
+**[Full user guide: INSTALL.md](INSTALL.md)** — setup, security warning, certificate trust, updates, uninstall, portable edition, and troubleshooting.
 
 ## Features
 
-- Native **PeaZip → cascading submenu** in the Windows 11 Explorer context menu, with icons resolved from the existing PeaZip installation.
-- The 12 classic operations: **Extract..., Extract here, Extract here (smart new folder), Extract here (in new folder), Open as archive, Browse path with PeaZip, Add to archive, Add to 7Z, Add to ZIP, Encrypt (7Z), Convert, CRC/hash/file tools**. Optional **Test archive(s)** is off by default.
-- A standalone C++/Win32 configuration GUI: toggle individual commands, reorder them using **Move Up/Move Down**, reset to defaults, choose separators and archive detection.
-- Per-user settings saved under `HKCU\Software\PeaZipModernMenu`. Changes are reflected on the next menu opening; no shell restart was required in the tester's environment.
-- Per-user Inno Setup install/update/uninstall. MSIX update uses `-ForceTargetApplicationShutdown` when an older version is active. Installer preserves settings by default on uninstall.
-- Both a traditionally installed PeaZip and **PeaZip Portable** can be targeted by configuring the exact `peazip.exe` path. Portable integration was also **successfully tested on a second Windows PC** with no prior PeaZip installation; the companion itself is installed, not portable.
+- Native cascading PeaZip context submenu with the familiar extract, compress, encrypt, convert, open and CRC/hash operations.
+- Optional **Test archive(s)** command; type-aware extraction availability for common archive extensions.
+- Native GUI to toggle menu items, change their order, restore defaults and select a custom `peazip.exe` location.
+- Per-user settings in `HKCU\Software\PeaZipModernMenu`, usually applied on the next context-menu open.
+- Updates via Inno Setup, with user preferences preserved. Full uninstall is managed by the **Community Companion** entry in Windows Installed apps.
+- Works with a separately installed **PeaZip Portable**; the companion itself is not portable.
 
 ## Screenshots
 
@@ -60,96 +72,26 @@ The eight screenshots below are provided by the tester. The files are included o
 
 ![Windows 11 26H2 — Settings / Personalization / Context menu](screenshots/Win11-26H2%28build%2026300.9818%29_Settings_Personalization_Context-menu.png)
 
-## Verification and limitations
+## Building from source (developers / maintainers)
 
-**Verified by a tester on Windows 11 26H2:** x64 MSVC build; MSIX signing with a locally trusted test certificate; Inno Setup build; clean install; in-place upgrade **1.2.0.0 → 1.2.1.0**; preservation of command configuration and order; operation of menu commands; uninstall followed by clean reinstall with preferences restored. On a **second PC** with no previous PeaZip installation, the tester confirmed successful operation with **PeaZip Portable** and the companion.
+See **[BUILDING.md](BUILDING.md)** for the Visual Studio x64, Windows SDK, Inno Setup and community certificate procedure, static checks, local verification and release preparation.
 
-**Not yet verified:** deployment to a Windows device without first trusting the test certificate, public signing and timestamping, silent deployment, failure-path uninstall under artificially induced MSIX errors, a portable path containing spaces, and extensive Unicode/long-path/multi-select regression runs. See [Windows test matrix](tests/WINDOWS_TEST_PLAN.md).
+Build outputs and developer certificates **must not** be committed. Only the maintainer holds the private signing key; public releases may include `.cer`, but never `.pfx`, `.p12` or private keys.
 
-The current package provides a **separate** menu. It does not remove Windows' built-in **Compress to** command. Extraction availability uses a filename-extension heuristic, not file-content detection. Virtual shell items are not supported. Extremely large selections and Windows command-line limits still apply. Other limitations are documented in [architecture](docs/ARCHITECTURE.md).
+## Testing and limitations
 
-## Quick start (source build)
+**Reported as successfully tested by the project maintainer/tester on Windows 11:** clean install, archive commands, GUI configuration and reordering, PeaZip Portable on a second PC, in-place upgrade from v1.2.1 to v1.2.2, uninstall/reinstall, optional certificate trust removal or retention, cancellation when consent is refused and cancellation when UAC elevation is refused. The exact release EXE and MSIX/certificate checksums should be verified before uploading final binaries; see [release checklist](docs/RELEASE_CHECKLIST.md).
 
-**Requirements**: Windows 11 x64; Visual Studio 2022 or 2026 Desktop Development with C++ and Windows SDK; Inno Setup 6/7 for an EXE installer; PeaZip 11.4.0 available separately.
+**Known behavior:** Windows may list two entries, **PeaZip Modern Menu** (MSIX) and **PeaZip Modern Shell Extension – Community Companion** (Inno Setup). To remove both components and optionally revoke trust, **uninstall the Community Companion entry**. See [INSTALL.md](INSTALL.md).
 
-From an ordinary x64 Windows Command Prompt:
+The extension does not remove Windows' built-in **Compress to** command. The archive recognition is based on filename extensions; virtual shell items are not supported, and large selections are subject to Windows command-line limits. Current installer is **per-user only**; all-users MSIX provisioning is a possible future release, not a v1.2.2 feature.
 
-```bat
-cd /d "C:\path\to\PeaZip-ModernMenu"
-tools\Build-x64.cmd
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\Build-Inno.ps1
-```
+## License and relationship to PeaZip
 
-The wrapper selects x64 MSVC; direct builds in an x86 Developer Prompt are intentionally rejected. Outputs are placed under `out\` (git-ignored):
+This independent companion is offered under the repository's MIT license, subject to the component and image rights described in [docs/PROVENANCE_AND_LICENSE.md](docs/PROVENANCE_AND_LICENSE.md). The PeaZip application and its own resources remain under their respective licenses (PeaZip is LGPL-3.0). The companion is not an official PeaZip build or an endorsement by its maintainer.
 
-```text
-out\PeaZip.ModernMenu.Community_1.2.1.0_x64.msix
-out\stage\PeaZip.ModernShellExtension.dll
-out\stage\PeaZipMenuConfig.exe
-out\installer\PeaZip-ModernMenu-Setup-v1.2.1.exe
-```
+Developed with assistance from **ChatGPT by OpenAI (GPT-6)**; installation, functional behavior and release testing were carried out by the project contributor.
 
-The default `Build-MSIX.ps1` signing mode is **LocalTest**. It creates/uses a self-signed **development** certificate *on your machine*. Neither this certificate nor the resulting installer is suitable for distributing to strangers. To create an unsigned package for inspection, use `tools\Build-x64.cmd -SignMode Unsigned` (it cannot be installed normally). For production certificate integration, read [Signing and distribution](docs/SIGNING_AND_DISTRIBUTION.md).
+## Security
 
-Run the static source checks using Python 3 (no external Python packages required):
-
-```bat
-py -3 tests\test_structure.py
-py -3 tests\test_architecture_build.py
-py -3 tests\test_inno_preprocessor.py
-py -3 tests\test_maintenance_patch.py
-py -3 tools\check_source_release.py
-py -3 tools\Make-Source-Release.py
-```
-
-These tests check source contracts and package structure; they **do not replace compilation or runtime testing on Windows**.
-
-## Install or update (developer/test environment)
-
-1. Confirm the local MSIX signing certificate is **explicitly trusted on this test device**, or use a legitimately trusted production certificate. **Do not run unknown unsigned software or import an arbitrary unverified root certificate.**
-2. Close Explorer windows and the configuration GUI; save other work (Windows may close the shell host during MSIX update).
-3. Run `out\installer\PeaZip-ModernMenu-Setup-v1.2.1.exe` under the **same non-elevated Windows user** that owns the existing companion MSIX. The installer is per-user; avoid **Run as administrator** when it would change user identity.
-4. Confirm registration:
-
-```powershell
-Get-AppxPackage -Name 'PeaZip.ModernMenu.Community' | Select-Object Name,Version,Status
-```
-
-On Windows 11 26H2 it may be necessary to enable the new extension under **Settings → Personalization → Context menu → Application extensions**. Exact UI wording can differ by language/build.
-
-Open **Start → PeaZip Modern Menu → Configure menu** to change command visibility and order.
-
-**Portable executable:** see [Portable integration](docs/PORTABLE.md). Use the **Browse** button to point to a stable unpacked `peazip.exe` location.
-
-## Uninstall and rollback
-
-Use **Windows Settings → Installed apps → PeaZip Modern Menu — Community Companion → Uninstall** under the same account. Choose **No** if asked to delete the companion settings and you want to restore preferences on a later install. This removes the companion MSIX registration and companion installer files; it does **not** remove PeaZip, archive files, classic shell integration, or the local test certificate.
-
-Before uninstall, optionally back up preferences:
-
-```powershell
-reg.exe export "HKCU\Software\PeaZipModernMenu" "$env:USERPROFILE\Desktop\PeaZipModernMenu-backup.reg" /y
-```
-
-Downgrading is intentionally blocked. To revert to an older independently retained companion installer, first uninstall the current companion (preserving settings), then install the older one. See [architecture](docs/ARCHITECTURE.md) for package-identity constraints.
-
-## Repository overview
-
-- `src/` — standalone C++17 COM DLL, native GUI and minimal MSIX stub.
-- `packaging/` — package manifest and placeholder branding assets.
-- `installer/` — independent Inno Setup per-user companion installer.
-- `tools/` — x64 build, signing, install/update and remove scripts.
-- `tests/` — static source checks and manual Windows test plan.
-- `docs/` — architecture, Portable integration, signing, contribution proposal and release checklist.
-
-## Licensing and acknowledgements
-
-The independent companion source code and project documentation are released under the **MIT License** (`LICENSE`), subject to the rights of their contributors and to the separate rights noted below. The `packaging/Assets` files are companion packaging images; confirm ownership or permission for these assets before public publication. The eight user-provided screenshots in `screenshots/` illustrate the software and may display PeaZip trademarks or interface elements; their inclusion does not imply endorsement by PeaZip.
-
-**PeaZip is separate software**, developed by Giorgio Tani and distributed under the **LGPL-3.0** license. This extension does not redistribute PeaZip executables, archiving engines, or the PeaZip context-menu icons. Menu icons are referenced from the user's own PeaZip installation or portable folder at runtime. All third-party software, branding, and associated assets remain subject to their respective owners' terms. See [Source provenance and licensing](docs/PROVENANCE_AND_LICENSE.md).
-
-**AI-assisted development disclosure:** This project was developed with assistance from **ChatGPT by OpenAI (GPT-6)**, including help drafting and revising C++/Win32 code, build and installer scripts, documentation, and troubleshooting. A human tester built the software and validated its behavior on Windows 11, including a second PC with PeaZip Portable. AI assistance is acknowledged transparently; it is not an assertion that OpenAI endorses, maintains, or holds the copyright to this repository. The people contributing and publishing the project remain responsible for code review, licensing, security, and releases.
-
-**Unofficial project:** PeaZip Modern Shell Extension is an independent community project, **not affiliated with or endorsed by PeaZip, Giorgio Tani, or OpenAI**.
-
-For upstream discussion, see [Proposal draft](docs/UPSTREAM_PROPOSAL.md) and [PeaZip contribution guidelines](https://github.com/peazip/PeaZip/blob/sources/CONTRIBUTING.md).
+Please read [SECURITY.md](SECURITY.md) and [docs/SIGNING_AND_DISTRIBUTION.md](docs/SIGNING_AND_DISTRIBUTION.md). Self-signed signing and SHA-256 checksum verification do **not** provide the same identity assurance as public CA signing. If you do not trust the publisher and release source, do not install the unsigned outer EXE or import its certificate.

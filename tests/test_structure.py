@@ -1,4 +1,4 @@
-"""Offline source-contract checks for v1.2.1. Not a substitute for Windows compilation/runtime tests."""
+"""Offline source-contract checks for v1.2.2. Not a substitute for Windows compilation/runtime tests."""
 from pathlib import Path
 import re
 from xml.etree import ElementTree as ET
@@ -16,7 +16,7 @@ ns = {'m':'http://schemas.microsoft.com/appx/manifest/foundation/windows10',
       'com':'http://schemas.microsoft.com/appx/manifest/com/windows10'}
 
 CLSID = 'C8425781-09D3-4DEB-A947-30CD4509C7C4'
-assert MANIFEST.find('m:Identity', ns).attrib['Version'] == '1.2.1.0'
+assert MANIFEST.find('m:Identity', ns).attrib['Version'] == '1.2.2.0'
 assert MANIFEST.find('m:Identity', ns).attrib['Name'] == 'PeaZip.ModernMenu.Community'
 assert MANIFEST.find('m:Identity', ns).attrib['Publisher'] == 'CN=PeaZipModernMenuLocal'
 verbs = MANIFEST.findall('.//d5:Verb', ns)
@@ -46,7 +46,7 @@ assert '__declspec(dllexport)' not in CPP
 DEF = (ROOT/'src'/'PeaZipShellExtension.def').read_text('ascii')
 assert 'DllGetClassObject PRIVATE' in DEF and 'DllCanUnloadNow PRIVATE' in DEF
 assert all(x in BUILD for x in ('/DEF:$def','User32.lib','PeaZipMenuConfig.cpp',
-                                'Comctl32.lib',"'1.2.1.0'", "'LocalTest','Production','Unsigned'"))
+                                'Comctl32.lib',"'1.2.2.0'", "'LocalTest','Community','Production','Unsigned'"))
 assert 'DllCanUnloadNow' in CPP and 'DllGetClassObject' in CPP
 assert all(x in INSTALL for x in ('Add-AppxPackage', 'Get-AppxPackage', 'ManifestPath',
                                 '$existing.Version -gt $target', 'exit 1'))
@@ -60,10 +60,10 @@ assert all(x in ISS for x in ('ExtractTemporaryFile', 'Preinstall-Companion.msix
     'UninstallSilent', 'ArchitecturesAllowed=x64os'))
 assert 'ForceTargetApplicationShutdown' in INSTALL
 assert 'PeaZipMenuConfig.exe' in ISS
-assert 'PeaZip.ModernMenu.Community_1.2.1.0_x64.msix' in ISS
+assert 'PeaZip.ModernMenu.Community_1.2.2.0_x64.msix' in ISS
 assert 'Remove-AppxPackage' not in ISS  # delegated to version-guarded script
 assert 'peazip.exe' not in ISS.lower()    # no app core bundled
 assert (ROOT/'tools'/'Build-Inno.ps1').is_file()
 assets=ROOT/'packaging'/'Assets'
 assert all((assets/f).is_file() for f in ('StoreLogo.png','Square150x150Logo.png','Square44x44Logo.png'))
-print('PASS: v1.2.1 manifest, stable COM identity, 13 commands, order/config GUI, upgrade/uninstall scripts, packaging')
+print('PASS: v1.2.2 manifest, stable COM identity, 13 commands, order/config GUI, upgrade/uninstall scripts, packaging')
